@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My To-Do List</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fde4ec;
+      --card: #fff7fa;
+      --accent: #e75480;
+      --accent-dark: #c93d68;
+      --text: #5a2a3c;
+      --muted: #b08a98;
+      --line: #f6c9d8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 48px 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "EB Garamond", Garamond, Georgia, serif;
+      font-size: 18px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 10px 30px rgba(231, 84, 128, 0.15);
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 2.2rem;
+      color: var(--accent);
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      min-height: 48px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 18px;
+      color: var(--text);
+      background: #fff;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: var(--accent); }
+
+    .add-btn {
+      min-height: 48px;
+      padding: 0 20px;
+      font: inherit;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .add-btn:hover { background: var(--accent-dark); }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 4px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    li input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    li label {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 0;
+      overflow-wrap: anywhere;
+      cursor: pointer;
+    }
+
+    li.done label {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .delete-btn {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      font-size: 1.6rem;
+      line-height: 1;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      color: var(--accent);
+      background: var(--bg);
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+      margin: 16px 0;
+    }
+
+    .counter {
+      margin: 18px 0 0;
+      text-align: center;
+      color: var(--accent-dark);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>My To-Do List</h1>
+
+    <form id="task-form">
+      <input type="text" id="task-input" placeholder="What needs doing?" aria-label="New task" autocomplete="off">
+      <button type="submit" class="add-btn">Add</button>
+    </form>
+
+    <ul id="task-list"></ul>
+    <p class="empty" id="empty-message">Nothing here yet — add your first task!</p>
+    <p class="counter" id="counter"></p>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "todo-tasks";
+    const form = document.getElementById("task-form");
+    const input = document.getElementById("task-input");
+    const list = document.getElementById("task-list");
+    const emptyMessage = document.getElementById("empty-message");
+    const counter = document.getElementById("counter");
+
+    let tasks = load();
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      } catch (e) {
+        // Storage unavailable (e.g. private mode) — app still works for this visit
+      }
+    }
+
+    function render() {
+      list.innerHTML = "";
+
+      tasks.forEach(task => {
+        const li = document.createElement("li");
+        if (task.done) li.classList.add("done");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = "task-" + task.id;
+        checkbox.checked = task.done;
+        checkbox.addEventListener("change", () => {
+          task.done = checkbox.checked;
+          save();
+          render();
+        });
+
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.textContent = task.text;
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "×";
+        del.setAttribute("aria-label", "Delete " + task.text);
+        del.addEventListener("click", () => {
+          tasks = tasks.filter(t => t.id !== task.id);
+          save();
+          render();
+        });
+
+        li.append(checkbox, label, del);
+        list.appendChild(li);
+      });
+
+      emptyMessage.hidden = tasks.length > 0;
+
+      const left = tasks.filter(t => !t.done).length;
+      counter.textContent = left === 1 ? "1 task left" : left + " tasks left";
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      tasks.push({ id: Date.now() + "-" + Math.random().toString(36).slice(2), text, done: false });
+      save();
+      render();
+      input.value = "";
+      input.focus();
+    });
+
+    render();
+  </script>
+</body>
+</html>
