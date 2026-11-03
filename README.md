@@ -12,9 +12,13 @@ A simple, pink to-do list app in a single HTML file. It uses only HTML, CSS and 
 - Centred layout that works well on phones
 - Pink theme with the EB Garamond font
 
+## Try it
+
+**Live app:** https://amelieromano.github.io/to-do-list/
+
 ## How to use
 
-Download or clone the repository, then open `index.html` in any web browser:
+Use the live link above, or download or clone the repository, then open `index.html` in any web browser:
 
 ```bash
 git clone https://github.com/amelieromano/to-do-list.git
